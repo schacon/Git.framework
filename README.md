@@ -29,6 +29,8 @@ Running the Test Suite
 -----------------------
 The test suite requires [MacRuby 0.5][macruby] and [Bacon][bacon] and can be run either through Xcode or `rake` in the Terminal. So far tests have been run using MacRuby r3090 and Bacon v0.9.
 
+Be sure to install Bacon via: 'sudo macgem install bacon'
+
 Code Formatting and Style
 --------------------------
 I've tried to keep the code formatting and style unified within the project and with the current body of code this should be reasonably easy to follow. To aid in keeping the tabs/spaces under control there is a pre-commit hook which can be installed via

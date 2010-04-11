@@ -1,0 +1,8 @@
+This is a simple macruby rack app that serves git repos over the smart protocol.
+
+It almost works.
+
+The current blocking issue is that it appears that MacRuby 0.5 shuts down an open
+socket if you try to send a null byte over it.  Perhaps this will be fixed in 0.6
+or later, but right now it killed the idea.  I wanted to leave the code here in
+case a later version supports it, I can quickly finish this up.

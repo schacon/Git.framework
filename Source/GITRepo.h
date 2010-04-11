@@ -121,6 +121,8 @@
  */
 - (NSArray *)tags;
 
+- (NSArray *)allRefs;
+
 //! \name Retrieving Objects
 /*!
  * Returns the GITObject identified by the \a objectHash.
@@ -133,5 +135,7 @@
  * \return object identified by \a objectHash or nil if it can't be found or an error occurred
  */
 - (GITObject *)objectWithSha1: (GITObjectHash *)objectHash error: (NSError **)error;
+
++ (void) initGitRepo:gitDirectory;
 
 @end

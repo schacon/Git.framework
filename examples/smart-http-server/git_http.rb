@@ -89,12 +89,25 @@ class GitHttp
         pp http
         pp refs = http.refAdvertisement("git-" + service_name)
         pp refs = NSString.alloc.initWithData(refs, encoding:NSString.defaultCStringEncoding)
-
+        
         @res = Rack::Response.new
         @res.status = 200
         @res["Content-Type"] = "application/x-git-%s-advertisement" % service_name
         hdr_nocache
-        @res.write(refs)
+
+        # because macruby dies on sending null bytes to socket, we have to 
+        # swap it out here and then swap it back via eventmachine for now
+        refs_respond = ""
+        refs.each_byte do |b|
+          if b == 0
+            refs_respond += "~x0x~"
+            @res["LENGTH_CORRECT"] = "4"
+          else
+            refs_respond += b.chr 
+          end
+        end
+
+        @res.write(refs_respond)
         @res.finish
       else
         dumb_info_refs

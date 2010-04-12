@@ -1,8 +1,24 @@
 This is a simple macruby rack app that serves git repos over the smart protocol.
+This helps me test the machinery a little bit easier - this way I can just run
+this server and hit it with Git and see if I can clone projects and what not. It
+might be interesting to use this as the basis for a Cocoa based Bananajour or 
+something in the future.
 
-It almost works.
+There is an issue where it appears that MacRuby 0.5 shuts down an open
+socket if you try to send a null byte over it.  Because of that, until it is
+fixed in MacRuby, you have to unfortunately run a EventMachine based proxy
+in front of it that will replace the string "~x0x~" with a null byte.  That
+string artificially replaces null bytes by the Rack app because it knows that
+MacRuby will explode if I try to send it over the wire.
 
-The current blocking issue is that it appears that MacRuby 0.5 shuts down an open
-socket if you try to send a null byte over it.  Perhaps this will be fixed in 0.6
-or later, but right now it killed the idea.  I wanted to leave the code here in
-case a later version supports it, I can quickly finish this up.
+Running This
+================
+
+(in two seperate terminals or something:)
+$ macruby git_http.rb
+$ ruby fing_fix.rb
+
+$ git ls-remote http://localhost:8088/myproject.git
+
+(it serves anything out of /opt by default, but you can change that in the 
+git_http.rb script at the very bottom in the config hash)

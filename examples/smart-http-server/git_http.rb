@@ -65,17 +65,21 @@ class GitHttp
 
     def service_rpc
       return render_no_access if !has_access(@rpc, true)
-      input = read_body
 
-      puts input
+      git = GITRepo.repoWithRoot(@dir)
+      http = GITHttpHelper.alloc.initWithRepo(git)
+
       @res = Rack::Response.new
       @res.status = 200
       @res["Content-Type"] = "application/x-git-%s-result" % @rpc
-      @res.finish do
-        # TODO: run the service needed
-        output = ""
-        @res.write output        # steam it to the client
+      if @rpc == 'upload-pack'
+        input = read_body
+        output = http.uploadPack(input)
+      elsif @rpc == 'receive-pack'
+        # TODO: run receive-pack
       end
+      @res.write output
+      @res.finish
     end
 
     def get_info_refs
@@ -84,18 +88,16 @@ class GitHttp
       if has_access(service_name)
         # TODO : get_info_refs
         git = GITRepo.repoWithRoot(@dir)
-        pp git
         http = GITHttpHelper.alloc.initWithRepo(git)
-        pp http
-        pp refs = http.refAdvertisement("git-" + service_name)
-        pp refs = NSString.alloc.initWithData(refs, encoding:NSString.defaultCStringEncoding)
-        
+        refs = http.refAdvertisement("git-" + service_name)
+        refs = NSString.alloc.initWithData(refs, encoding:NSString.defaultCStringEncoding)
+
         @res = Rack::Response.new
         @res.status = 200
         @res["Content-Type"] = "application/x-git-%s-advertisement" % service_name
         hdr_nocache
 
-        # because macruby dies on sending null bytes to socket, we have to 
+        # because macruby dies on sending null bytes to socket, we have to
         # swap it out here and then swap it back via eventmachine for now
         refs_respond = ""
         refs.each_byte do |b|
@@ -103,7 +105,7 @@ class GitHttp
             refs_respond += "~x0x~"
             @res["LENGTH_CORRECT"] = "4"
           else
-            refs_respond += b.chr 
+            refs_respond += b.chr
           end
         end
 

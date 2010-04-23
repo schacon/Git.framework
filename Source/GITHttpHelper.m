@@ -8,10 +8,13 @@
 
 #import "GITHttpHelper.h"
 #import "GITRef.h"
+#import "GITCommit.h"
+#import "GITObjectHash.h"
 
 @implementation GITHttpHelper
 
 @synthesize repo;
+@synthesize refDict;
 
 - (id)initWithRepo: (GITRepo *)theRepo {
     if ( ![super init] )
@@ -21,6 +24,8 @@
 	
     return self;
 }
+
+// For handling the /info/refs call
 
 - (NSData *)refAdvertisement:(NSString *)gitService {
 	NSArray *refs = [self.repo allRefs];
@@ -55,6 +60,109 @@
 	return outdata;
 }
 
+// for handling the /upload-pack RPC call
+//
+// this takes a string of want/haves from the client
+// and returns a filehandle containing either another
+// series of want/haves or the actual packfile data
+//
+// - using a filehandle here so I don't have to buffer 
+//   the whole packfile response in memory
+
+- (NSFileHandle *)uploadPack:(NSString *)wantHaves {
+	NSLog(@"upload pack file");
+	NSLog(@"wantHaves: %@", wantHaves);
+
+	NSString *thisLine, *cmd, *sha;
+	NSArray *values;
+	GITObjectHash *shaHash;
+
+	refDict = [[NSMutableDictionary alloc] init];
+	
+	//NSMutableArray *needRefs = [[NSMutableArray alloc] init];
+
+	NSArray *lines = [wantHaves componentsSeparatedByString:@"\n"];
+	NSEnumerator *e    = [lines objectEnumerator];
+	while ( (thisLine = [e nextObject]) ) {		
+		values = [thisLine componentsSeparatedByString:@" "];
+		cmd	= [[values objectAtIndex: 0] substringFromIndex:4];
+		sha	= [values objectAtIndex: 1];
+		if([cmd isEqualToString:@"have"]) {
+			[refDict setObject:@"have" forKey:sha];
+		}
+		if([cmd isEqualToString:@"want"]) {
+			shaHash = [GITObjectHash objectHashWithString:sha];
+			[self gatherObjectShasFromCommit:shaHash];
+		}		
+	}
+	
+	// [self sendPackData];
+	return nil;
+}
+
+- (void) gatherObjectShasFromCommit:(GITObjectHash *)shaHash 
+{
+	NSString *parentSha;
+	NSError *err;
+
+	GITCommit *commit = [repo objectWithSha1:shaHash error:err];
+	[refDict setObject:@"_commit" forKey:[shaHash unpackedString]];
+
+	// add the tree objects
+	//[self gatherObjectShasFromTree:[commit treeSha1]];
+	
+	NSArray *parents = [commit parentShas];
+	
+	NSEnumerator *e = [parents objectEnumerator];
+	while ( (parentSha = [e nextObject]) ) {
+		NSLog(@"parent sha:%@", parentSha);
+		// TODO : check that refDict does not have this
+		[self gatherObjectShasFromCommit:parentSha];
+	}
+}
+
+/*
+- (void) gatherObjectShasFromTree:(GITObjectHash *)shaHash
+{
+	ObjGitTree *tree = [ObjGitTree alloc];
+	[tree initFromGitObject:[gitRepo getObjectFromSha:shaValue]];
+	[refDict setObject:@"/" forKey:shaValue];
+	NSEnumerator *e = [[tree treeEntries] objectEnumerator];
+	//[tree release];
+	NSArray *entries;
+	NSString *name, *sha, *mode;
+	while ( (entries = [e nextObject]) ) {
+		mode = [entries objectAtIndex:0];
+		name = [entries objectAtIndex:1];
+		sha  = [entries objectAtIndex:2];
+		[refDict setObject:name forKey:sha];
+		if ([mode isEqualToString:@"40000"]) { // tree
+			// TODO : check that refDict does not have this
+			[self gatherObjectShasFromTree:sha];
+		}
+	}
+}
+*/
+
+
+
+// for handling the /receive-pack RPC call
+//
+// this takes a refs+packfile file handle that was POSTed
+// by the Git client and processes it, returning the refs
+// that were updated as an NSData object
+
+- (NSData *)receivePack:(NSFileHandle *)packfile {
+	return nil;
+}
+
+
+// DATA MANIPULATION METHODS //
+
+// prepends the packet-line data (4 leading bytes representing the 
+// length of data that follows) to a given string and returns a new
+// string
+
 #define hex(a) (hexchar[(a) & 15])
 - (NSString*) prependPacketLine:(NSString*) info
 {
@@ -67,9 +175,7 @@
 	buffer[1] = hex(length >> 8);
 	buffer[2] = hex(length >> 4);
 	buffer[3] = hex(length);
-	
-	NSLog(@"write len [%c %c %c %c]", buffer[0], buffer[1], buffer[2], buffer[3]);
-	
+		
 	NSData *data=[[[NSData alloc] initWithBytes:buffer length:4] autorelease];
 	NSString *lenStr = [[NSString alloc] 
 						initWithData:data
@@ -77,6 +183,8 @@
 	
 	return [NSString stringWithFormat:@"%@%@", lenStr, info];
 }
+
+// takes a string, prepends the packet-line data and returns a NSData object
 
 - (NSData*) packetData:(NSString*) info
 {

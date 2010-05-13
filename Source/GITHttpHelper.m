@@ -37,6 +37,7 @@
 	[outdata appendData:[@"0000" dataUsingEncoding:NSUTF8StringEncoding]];
 	
 	NSString *cap = @"include_tag multi_ack_detailed";
+	NSLog(@"testing");
 	
 	int count = 0;
 	NSString *refLine;
@@ -71,7 +72,7 @@
 
 - (NSFileHandle *)uploadPack:(NSString *)wantHaves {
 	NSLog(@"upload pack file");
-	NSLog(@"wantHaves: %@", wantHaves);
+	NSLog(@"wantHaves: \n%@", wantHaves);
 
 	NSString *thisLine, *cmd, *sha;
 	NSArray *values;
@@ -83,19 +84,28 @@
 
 	NSArray *lines = [wantHaves componentsSeparatedByString:@"\n"];
 	NSEnumerator *e    = [lines objectEnumerator];
-	while ( (thisLine = [e nextObject]) ) {		
-		values = [thisLine componentsSeparatedByString:@" "];
-		cmd	= [[values objectAtIndex: 0] substringFromIndex:4];
-		sha	= [values objectAtIndex: 1];
-		if([cmd isEqualToString:@"have"]) {
-			[refDict setObject:@"have" forKey:sha];
+	while ( (thisLine = [e nextObject]) ) {	
+		NSLog(@"processing line: %@", thisLine);
+		
+		if (![thisLine isEqualToString:@""] &&
+			![thisLine isEqualToString:@"00000009done"]) {
+			values = [thisLine componentsSeparatedByString:@" "];
+			cmd	= [[values objectAtIndex: 0] substringFromIndex:4];
+			sha	= [values objectAtIndex: 1];
+			if([cmd isEqualToString:@"have"]) {
+				[refDict setObject:@"have" forKey:sha];
+			}
+			if([cmd isEqualToString:@"want"]) {
+				NSLog(@"haveFU: %@", sha);
+				shaHash = [GITObjectHash objectHashWithString:sha];
+				[self gatherObjectShasFromCommit:shaHash];
+			}
 		}
-		if([cmd isEqualToString:@"want"]) {
-			shaHash = [GITObjectHash objectHashWithString:sha];
-			[self gatherObjectShasFromCommit:shaHash];
-		}		
+		NSLog(@"done with loop");
 	}
 	
+	NSLog(@"done");
+	NSLog(@"reflist: %@", refDict);
 	// [self sendPackData];
 	return nil;
 }
@@ -103,21 +113,32 @@
 - (void) gatherObjectShasFromCommit:(GITObjectHash *)shaHash 
 {
 	NSString *parentSha;
-	NSError *err;
 
-	GITCommit *commit = [repo objectWithSha1:shaHash error:err];
+	NSLog(@"before");
+	GITObject *commit = [repo objectWithSha1:shaHash error:NULL];
+	NSLog(@"after: %@", commit);
+	NSLog(@"type: %d", [commit type]);
 	[refDict setObject:@"_commit" forKey:[shaHash unpackedString]];
 
 	// add the tree objects
 	//[self gatherObjectShasFromTree:[commit treeSha1]];
+	if ([commit type] == GITObjectTypeTag) {
+		commit = [commit target];
+		NSLog(@"after: %@", commit);
+		NSLog(@"type: %d", [commit type]);
+	}
 	
-	NSArray *parents = [commit parentShas];
-	
-	NSEnumerator *e = [parents objectEnumerator];
-	while ( (parentSha = [e nextObject]) ) {
-		NSLog(@"parent sha:%@", parentSha);
-		// TODO : check that refDict does not have this
-		[self gatherObjectShasFromCommit:parentSha];
+	if ([commit type] == GITObjectTypeCommit) {
+		NSArray *parents = [commit parentShas];
+		//GITObjectHash *pHash;
+		
+		NSEnumerator *e = [parents objectEnumerator];
+		while ( (parentSha = [e nextObject]) ) {
+			NSLog(@"parent sha:%@", parentSha);
+			// TODO : check that refDict does not have this
+			//pHash = [GITObjectHash objectHashWithString:parentSha];
+			[self gatherObjectShasFromCommit:parentSha];
+		}
 	}
 }
 

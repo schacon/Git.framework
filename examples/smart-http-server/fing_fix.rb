@@ -1,6 +1,8 @@
 require 'rubygems'
 require 'em-proxy'
 
+puts 'Starting on 8088'
+
 Proxy.start(:host => "0.0.0.0", :port => 8088, :debug => true) do |conn|
   conn.server :srv, :host => "127.0.0.1", :port => 8089
 

@@ -31,7 +31,7 @@
 - (NSFileHandle *)uploadPack:(NSString *)wantHaves;
 
 - (void) gatherObjectShasFromCommit:(GITObjectHash *)shaHash; 
-//- (void) gatherObjectShasFromTree:(GITObjectHash *)shaHash;
+- (void) gatherObjectShasFromTree:(GITObjectHash *)shaHash;
 
 - (NSData *)receivePack:(NSFileHandle *)packfile;
 

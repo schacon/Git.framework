@@ -26,7 +26,7 @@
 
     self.repo = theRepo;
     self.name = theName;
-    self.targetName = theTarget;
+    self.targetName = [theTarget stringByReplacingOccurrencesOfString:@"\n" withString:@""];
     self.link = NO;
 
     if ( [self.targetName hasPrefix:@"ref: "] )

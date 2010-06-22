@@ -174,7 +174,7 @@ done:
     GITLooseObject *looseObject = [GITLooseObject looseObjectWithSha1:objectHash from:self.objectsDirectory error:error];
     if ( looseObject )      // Should really return the error if it was something bad
         return [looseObject objectInRepo:self error:error];
-
+	NSLog(@"not loose");
     // Need to load it from the pack collection
     GITPackObject *packObject = [self.packCollection unpackObjectWithSha1:objectHash error:error];
     if ( !packObject )

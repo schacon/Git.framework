@@ -47,6 +47,7 @@
     }
 
     off_t packOffset = [self.index packOffsetForSha1:objectHash error:error];
+
     if ( packOffset == NSNotFound )
         return nil;
     return [self unpackObjectAtOffset:packOffset sha1:objectHash error:error];

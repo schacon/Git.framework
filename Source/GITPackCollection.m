@@ -77,7 +77,7 @@
     GITPackObject *packObject = nil;
 
     if ( recent ) {
-        packObject = [self.recent unpackObjectWithSha1:objectHash error:error];
+        packObject = [self.recent unpackObjectWithSha1:objectHash error:error];		
         if ( packObject )
             return packObject;
     }

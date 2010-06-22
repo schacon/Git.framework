@@ -10,6 +10,8 @@
 #import "GITRef.h"
 #import "GITCommit.h"
 #import "GITObjectHash.h"
+#import "GITTree.h"
+#import "GITTreeItem.h"
 
 @implementation GITHttpHelper
 
@@ -112,7 +114,7 @@
 
 - (void) gatherObjectShasFromCommit:(GITObjectHash *)shaHash 
 {
-	NSString *parentSha;
+	GITObjectHash *parentSha;
 
 	NSLog(@"before");
 	GITObject *commit = [repo objectWithSha1:shaHash error:NULL];
@@ -121,7 +123,7 @@
 	[refDict setObject:@"_commit" forKey:[shaHash unpackedString]];
 
 	// add the tree objects
-	//[self gatherObjectShasFromTree:[commit treeSha1]];
+
 	if ([commit type] == GITObjectTypeTag) {
 		commit = [commit target];
 		NSLog(@"after: %@", commit);
@@ -129,6 +131,10 @@
 	}
 	
 	if ([commit type] == GITObjectTypeCommit) {
+		NSLog(@"gather trees");
+		[self gatherObjectShasFromTree:[commit treeSha1]];
+		NSLog(@"trees gathered");
+
 		NSArray *parents = [commit parentShas];
 		//GITObjectHash *pHash;
 		
@@ -137,33 +143,37 @@
 			NSLog(@"parent sha:%@", parentSha);
 			// TODO : check that refDict does not have this
 			//pHash = [GITObjectHash objectHashWithString:parentSha];
-			[self gatherObjectShasFromCommit:parentSha];
+			if (![refDict valueForKey:[parentSha unpackedString]]) {
+				[self gatherObjectShasFromCommit:parentSha];
+			}
 		}
 	}
 }
 
-/*
 - (void) gatherObjectShasFromTree:(GITObjectHash *)shaHash
 {
-	ObjGitTree *tree = [ObjGitTree alloc];
-	[tree initFromGitObject:[gitRepo getObjectFromSha:shaValue]];
-	[refDict setObject:@"/" forKey:shaValue];
-	NSEnumerator *e = [[tree treeEntries] objectEnumerator];
-	//[tree release];
-	NSArray *entries;
-	NSString *name, *sha, *mode;
-	while ( (entries = [e nextObject]) ) {
-		mode = [entries objectAtIndex:0];
-		name = [entries objectAtIndex:1];
-		sha  = [entries objectAtIndex:2];
-		[refDict setObject:name forKey:sha];
-		if ([mode isEqualToString:@"40000"]) { // tree
+	NSLog(@"treeHash:%@", shaHash);
+	NSLog(@"treeSha:%@", [shaHash unpackedString]);
+	GITTree *tree = [repo objectWithSha1:shaHash error:NULL];
+	NSLog(@"tree:%@", tree);
+	[refDict setObject:@"/" forKey:[shaHash unpackedString]];
+
+	NSEnumerator *e = [[tree items] objectEnumerator];
+	GITTreeItem *item;
+    NSString  *name;        //!< Name of the file or directory
+    GITObjectHash *sha1; 
+	GITTreeItemMode mode;   //!< File/directory mode of the item
+	while ( (item = [e nextObject]) ) {
+		mode = [item mode];
+		name = [item name];
+		sha1  = [item sha1];
+		[refDict setObject:name forKey:[sha1 unpackedString]];
+		if (mode == GITTreeItemModeDir) {
 			// TODO : check that refDict does not have this
-			[self gatherObjectShasFromTree:sha];
+			[self gatherObjectShasFromTree:sha1];
 		}
 	}
 }
-*/
 
 
 

@@ -9,12 +9,13 @@ The currently supported features of the project are
   * Reading objects, both loose and packed
   * Resolving refs from `.git/refs`
   * Reading branches, both local and remote
+  * Enumeration of commits in breadth and depth first orders
 
 Planned Features
 -----------------
 Features which will be implemented at some point (in no particular order)
 
-  * Rev-list Support
+  * Rev-list Support\*\*
   * Pulling changes from a remote repository via either ssh:// or git://
   * Pushing changes to a remote repository via ssh://
   * Mutable objects to enable writing new objects to the repository
@@ -25,9 +26,34 @@ Additionally features from [CocoaGit][cocoagit] which are not yet supported will
 
 \*maybe, as and when things are thought of, suggested, or otherwise materialize, terms and conditions may apply, see binary for details
 
+\*\* Currently supported through `GITGraph` but not yet plumbed into `GITRepo` in anyway
+
+Adding the Framework to your Mac OS X Application
+--------------------------------------------------
+The first step to this is compiling a *Release* build of Git.framework, this can either be done in Xcode or via `rake` on the command line as
+
+    $ rake build:release
+
+the built product will be in the `builds/Release/` directory.
+
+### Installing in your project
+  * In the Finder, copy `Git.framework` to your project directory (eg MyProject/Frameworks)
+  * Add the `Frameworks/Git.framework` to your *Linked Frameworks* group in Xcode
+  * Open *Get Info* on your Application Target, select the *Build* tab
+  * Change the *Configuration* to `All Configurations`
+  * Enter `Runpath Search Paths` into the *Filter* field
+  * Add `@executable_path/../Frameworks` to the *Runpath Search Paths*
+  * Add a `New Copy Files Build Phase` to your Application Target
+  * Select `Frameworks` from the *Destination* dropdown
+  * Drag `Git.framework` from *Linked Frameworks* to your new *Copy Files* build phase
+
+You might want to rename the *Copy Files* build phase to *Copy Frameworks*
+
 Running the Test Suite
 -----------------------
 The test suite requires [MacRuby 0.5][macruby] and [Bacon][bacon] and can be run either through Xcode or `rake` in the Terminal. So far tests have been run using MacRuby r3090 and Bacon v0.9.
+
+Bacon can be installed either using Rubygems or alternatively with [rip][rip]
 
 Code Formatting and Style
 --------------------------
@@ -41,6 +67,11 @@ if you don't have a pre-commit hook already then this one will be installed, if 
     $ rake check_tabs:staged
 
 and any offending lines will be printed.
+
+The hook can be configured to ignore specific file MIME types and extensions, this is done as follows
+
+    $ git config pre-commit.ignored.mime 'image/ application/xml application/octet-stream'
+    $ git config pre-commit.ignored.extensions 'graffle pbxproj'
 
 BridgeSupport
 --------------
@@ -79,3 +110,4 @@ Released under the terms of the MIT licence, details of which are below
 [macruby]: http://macruby.org/
 [bacon]: http://rubyforge.org/projects/test-spec
 [doxygen]: http://www.stack.nl/~dimitri/doxygen/
+[rip]: http://hellorip.com/

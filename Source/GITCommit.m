@@ -58,28 +58,21 @@ static parsingRecord tzParsingRecord            = { "", 0, 0, 5, '\n' };
     NSMutableArray *theParents = [[NSMutableArray alloc] initWithCapacity:1];  //!< 1 is the most common, but we might have more
 
     // Get the tree fields
-    NSString *treeString = [self newStringWithObjectRecord:treeParsingRecord bytes:&dataBytes];
-    if ( !treeString ) {
+    GITObjectHash *treeHash = [self newObjectHashWithObjectRecord:treeParsingRecord bytes:&dataBytes];
+    if ( !treeHash ) {
         GITError(error, GITObjectErrorParsingFailed, NSLocalizedString(@"Failed parsing tree field from commit", @"GITObjectErrorParsingFailed"));
         [theParents release];
         [self release];
         return nil;
     }
-    self.treeSha1 = [GITObjectHash objectHashWithString:treeString];
-    [treeString release];
+    self.treeSha1 = treeHash;
+    [treeHash release];
 
     // Get the parent fields
-    NSString *parentString;
-    while ( nil != (parentString = [self newStringWithObjectRecord:parentParsingRecord bytes:&dataBytes]) ) {
-        [theParents addObject:[GITObjectHash objectHashWithString:parentString]];
-        [parentString release];
-    }
-
-    if ( [theParents count] < 1 ) {
-        GITError(error, GITObjectErrorParsingFailed, NSLocalizedString(@"Failed parsing parent field from commit", @"GITObjectErrorParsingFailed"));
-        [theParents release];
-        [self release];
-        return nil;
+    GITObjectHash *parentHash;
+    while ( nil != (parentHash = [self newObjectHashWithObjectRecord:parentParsingRecord bytes:&dataBytes]) ) {
+        [theParents addObject:parentHash];
+        [parentHash release];
     }
 
     self.parentShas = [theParents copy];
@@ -207,8 +200,10 @@ static parsingRecord tzParsingRecord            = { "", 0, 0, 5, '\n' };
     self.committerDate      = [self parseDateTimeFromBytes:&dataBytes];
 
     dataBytes++;            //!< Skip over the \n between the header data and the message body
-    NSUInteger messageLen   = [cachedData length] - (dataBytes - start) - 1;
-    NSString *messageString = [[NSString alloc] initWithBytes:dataBytes length:messageLen encoding:NSASCIIStringEncoding];
+    NSUInteger messageLen   = [cachedData length] - (dataBytes - start);
+    NSString *messageString = [[NSString alloc] initWithBytes:dataBytes length:messageLen encoding:NSUTF8StringEncoding];
+    if ( messageString == nil )
+        messageString = [[NSString alloc] initWithBytes:dataBytes length:messageLen encoding:NSASCIIStringEncoding];
 
     self.message            = messageString;
 

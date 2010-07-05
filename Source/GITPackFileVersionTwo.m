@@ -71,11 +71,6 @@
         shift += 7;
     }
 
-    off_t nextOffset = [self.index nextOffsetAfterOffset:*offset];
-    if ( nextOffset == -1 )
-        nextOffset = [self checksumRange].location;
-    header->dataSize = nextOffset - *offset;
-
     return header;
 }
 
@@ -83,14 +78,15 @@
     GITPackFileObjectHeader header;
     [self unpackEntryHeaderAtOffset:&offset intoHeader:&header];
 
-    NSData *packData;
+    NSMutableData *packData;
     switch ( header.type ) {
         case GITObjectTypeCommit:
         case GITObjectTypeTree:
         case GITObjectTypeBlob:
         case GITObjectTypeTag:
-            packData = [[self.data subdataWithRange:NSMakeRange(offset, header.dataSize)] zlibInflate];
-            if ( [packData length] != header.size ) {
+            packData = [NSMutableData dataWithLength:header.size];
+
+            if ( [self.data zlibInflateInto:packData offset:offset] != header.size ) {
                 GITError(error, GITPackFileErrorObjectSizeMismatch, NSLocalizedString(@"Object size mismatch", @"GITPackFileErrorObjectSizeMismatch"));
                 return nil;
             }
@@ -125,7 +121,7 @@
             baseOffset++;
             c = bytes[used++];
             baseOffset <<= 7;
-            baseOffset += c & 0x7f;
+            baseOffset |= c & 0x7f;
         }
 
         baseOffset = header->offset - baseOffset;
@@ -138,7 +134,11 @@
         return nil;
     }
 
-    NSData *deltaData = [[self.data subdataWithRange:NSMakeRange(offset, header->dataSize)] zlibInflate];
+    NSMutableData *deltaData = [NSMutableData dataWithLength:header->size];
+    if ( [self.data zlibInflateInto:deltaData offset:offset] < 0 ) {
+        GITError(error, GITPackFileErrorInflationFailed, NSLocalizedString(@"Inflation of packed object failed", @"GITPackFileErrorInflationFailed"));
+        return nil;
+    }
     return [packObject packObjectByDeltaPatchingWithData:deltaData];
 }
 

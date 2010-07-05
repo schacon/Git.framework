@@ -7,9 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "GITCommitEnumerator.h"             //!< For GITCommitEnumeratorMode
 
 
-@class GITRefResolver, GITPackCollection, GITObject, GITObjectHash;
+@class GITRefResolver, GITPackCollection, GITObject, GITObjectHash, GITCommit;
 
 /*!
  * The GITRepo class declares the programmatic interface to the repository.
@@ -136,6 +137,31 @@
  */
 - (GITObject *)objectWithSha1: (GITObjectHash *)objectHash error: (NSError **)error;
 
-+ (void) initGitRepo:gitDirectory;
+//! \name Retrieving Specific commit points
+/*!
+ * Returns the commit object for the current HEAD of the receiver.
+ *
+ * \return commit object for the HEAD of the receiver
+ */
+- (GITCommit *)head;
 
+//! \name Enumerating Commits
+/*!
+ * Returns an enumerator object from the HEAD of the receiver.
+ *
+ * \return enumerator object from the HEAD of the reciever
+ * \sa enumeratorWithMode:
+ */
+- (GITCommitEnumerator *)enumerator;
+
+/*!
+ * Returns an enumerator object from the HEAD of the receiver with the given \a mode.
+ *
+ * \param mode Enumerator mode to be used by the returned enumerator
+ * \return enumerator object from the HEAD of the receiver with the given \a mode
+ * \sa enumerator
+ */
+- (GITCommitEnumerator *)enumeratorWithMode: (GITCommitEnumeratorMode)mode;
+
++ (void) initGitRepo:gitDirectory;
 @end

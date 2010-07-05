@@ -15,8 +15,9 @@
 @interface GITCommitEnumerator ()
 @property (retain) GITCommit *head;
 @property (assign) GITCommitEnumeratorMode mode;
-@property (retain) NSMutableArray *queue;
-@property (retain) NSMutableSet *visited;
+@property (assign) NSMutableArray *queue;
+@property (assign) NSMutableArray *merges;
+@property (assign) NSMutableSet *visited;
 
 - (id)nextObjectInBreadthFirstTraversal;
 - (id)nextObjectInDepthFirstTraversal;
@@ -24,7 +25,7 @@
 
 @implementation GITCommitEnumerator
 
-@synthesize head, mode, queue, visited;
+@synthesize head, mode, queue, merges, visited;
 
 + (GITCommitEnumerator *)enumeratorFromCommit: (GITCommit *)head {
     return [self enumeratorFromCommit:head mode:GITCommitEnumeratorBreadthFirstMode];
@@ -44,6 +45,9 @@
     self.queue = [[NSMutableArray alloc] initWithObjects:[theHead sha1], nil];
     self.visited = [[NSMutableSet alloc] initWithObjects:[theHead sha1], nil];
 
+    if ( self.mode == GITCommitEnumeratorDepthFirstMode )
+        self.merges = [[NSMutableArray alloc] init];
+
     firstPass = YES;
 
     return self;
@@ -51,7 +55,11 @@
 
 - (void)dealloc {
     self.head = nil;
+    [queue release];
     self.queue = nil;
+    [merges release];
+    self.merges = nil;
+    [visited release];
     self.visited = nil;
     [super dealloc];
 }
@@ -71,21 +79,21 @@
     }
 }
 
-- (NSArray *)allObjectsUntilCommit: (GITCommit *)commit {
+- (NSArray *)allObjectsUntilObjectHash: (GITObjectHash *)hash {
     NSMutableArray *array = [NSMutableArray arrayWithCapacity:1];
 
     id object;
     while ( object = [self nextObject] ) {
         [array addObject:object];
-        if ( [commit isEqualTo:object] )
+        if ( [hash isEqualToObjectHash:[object sha1]] )
             break;
     }
 
     return [NSArray arrayWithArray:array];
 }
 
-- (NSArray *)allObjectsUntilObjectHash: (GITObjectHash *)hash {
-    return [self allObjectsUntilCommit:(GITCommit *)[self.head.repo objectWithSha1:hash error:NULL]];
+- (NSArray *)allObjectsUntilCommit: (GITCommit *)commit {
+    return [self allObjectsUntilObjectHash:[commit sha1]];
 }
 
 - (NSArray *)allObjectsUntil: (id)obj {
@@ -141,14 +149,38 @@
 }
 
 #pragma mark Depth First Traversal Algorithm
+- (id)nextObjectInDepthFirstTraversalFromMergePoint {
+    GITCommit *merge = nil;
+    GITObjectHash *parent = nil;
+
+    if ( [merges count] == 0 )
+        return nil;
+
+    merge = [self nextCommit:[merges objectAtIndex:0]];
+    [merges removeObjectAtIndex:0];
+
+    for ( parent in [merge parentShas] ) {
+        if ( ![visited containsObject:parent] ) {
+            [queue insertObject:parent atIndex:0];
+            [visited addObject:parent];
+            return [self nextObjectInDepthFirstTraversal];
+        }
+    }
+
+    return nil;
+}
 - (id)nextObjectInDepthFirstTraversal {
     GITCommit *current = nil;
     GITObjectHash *parent = nil;
 
     if ( [queue count] == 0 )
-        return nil;
+        return [self nextObjectInDepthFirstTraversalFromMergePoint];
 
     current = [self nextCommit:[queue objectAtIndex:0]];    //!< Get the commit of the head of the queue
+    [queue removeObjectAtIndex:0];
+
+    if ( [current isMerge] )
+        [merges insertObject:[current sha1] atIndex:0];
 
     for ( parent in [current parentShas] ) {
         if ( ![visited containsObject:parent] ) {           //!< We've not yet seen this commit
@@ -158,9 +190,7 @@
         }
     }
 
-    // If we've made it this far then we've exhausted the parents of the current commit
-    [queue removeObjectAtIndex:0];                          //!< Remove this commit from the queue
-    return [self nextObjectInDepthFirstTraversal];          //!< Rinse, repeat...
+    return current;
 }
 
 @end

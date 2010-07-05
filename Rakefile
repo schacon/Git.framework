@@ -22,9 +22,38 @@ namespace :bridgesupport do
   end
 end
 
+namespace :check do
+  task :framework_header => ['build:release'] do
+    imports = Dir['build/Release/Git.framework/Headers/*.h'].map do |f|
+      '#import "%s"' % File.basename(f)
+    end
+
+    imports.delete('#import "Git.h"')
+    File.open('Source/Git.h', 'r') do |f|
+      f.each_line do |l|
+        imports.delete(l.chomp)
+      end
+    end
+
+    unless imports.empty?
+      puts "Missing Git.h imports:"
+      puts imports.map { |l| "    #{l}" }.join("\n")
+    else
+      puts "Git.h is complete"
+    end
+  end
+end
+
 desc "Runs the test suite for the framework (Requires MacRuby)"
 task :test do
-  sh 'xcodebuild -target Tests -configuration Debug'
+  # Need to use system instead of sh to avoid a segv on macruby 0.6
+  system 'xcodebuild -target Tests -configuration Debug'
+end
+
+test_pattern = /^test\:(.*)$/
+rule test_pattern do |t|
+  ENV['TEST_PAT'] = t.name[test_pattern, 1]
+  Rake::Task['test'].invoke
 end
 
 desc "Generates the documentation for the framework (Requires Doxygen)"
@@ -77,11 +106,27 @@ def check_for_tabs_in(srcfile)
   end
 end
 
+def matches_mime?(file)
+  @ignored_mime_types ||= `git config pre-commit.ignored.mime`.chomp.split(" ")
+
+  mime_type = `file --mime-type -b "\#{file}"`.chomp
+  @ignored_mime_types.any? {|t| mime_type =~ /^#{t}/ }
+end
+def matches_ext?(file)
+  @ignored_extensions ||= `git config pre-commit.ignored.extensions`.chomp.split(" ")
+  @ignored_extensions.any? {|e| file =~ /\.#{e}$/ }
+end
+
 namespace :check_tabs do
   desc "Checks staged files for tab characters"
   task :staged do
     puts "Checking for tab characters in staged files..."
     `git diff --cached --name-only`.split("\n").each do |srcfile|
+      next unless File.file?(srcfile)
+      next if srcfile =~ /^\.git/
+      next if matches_ext?(srcfile)
+      next if matches_mime?(srcfile)
+
       check_for_tabs_in srcfile
     end
   end
@@ -89,6 +134,11 @@ namespace :check_tabs do
   task :source do
     puts "Checking for tab characters in Source/ files..."
     Dir.glob("Source/**/*.[hm]").each do |srcfile|
+      next unless File.file?(srcfile)
+      next if srcfile =~ /^\.git/
+      next if matches_ext?(srcfile)
+      next if matches_mime?(srcfile)
+
       check_for_tabs_in srcfile
     end
   end
@@ -148,5 +198,10 @@ EOF
       end
       FileUtils.chmod(0755, hook_file)
     end
+
+    puts "Pre Commit hook successfully installed, please note configuration is via `git config`"
+    puts "the following commands are recommended to ignore files for Tab checking"
+    puts "  $ git config pre-commit.ignored.mime 'image/ application/xml application/octet-stream'"
+    puts "  $ git config pre-commit.ignored.extensions 'graffle pbxproj'"
   end
 end

@@ -44,11 +44,13 @@
 	int count = 0;
 	NSString *refLine;
 	for ( GITRef *ref in refs ) {
+		NSLog(@"ref: %@", ref);
 		if(count == 0) {
 			refLine = [NSString stringWithFormat:@"%@ %@\0%@\n", [ref targetName], [ref name], cap];
 		} else {
 			refLine = [NSString stringWithFormat:@"%@ %@\n", [ref targetName], [ref name]];
 		}
+		NSLog(@"line: %@", refLine);
 		
 		[outdata appendData:[self packetData:refLine]];
 
@@ -58,7 +60,7 @@
 	if(count == 0) {
 		[outdata appendData:[self packetData:@"0000000000000000000000000000000000000000 capabilities^{}\0include_tag multi_ack_detailed"]];
 	}
-
+	
 	[outdata appendData:[@"0000" dataUsingEncoding:NSUTF8StringEncoding]];	
 	return outdata;
 }

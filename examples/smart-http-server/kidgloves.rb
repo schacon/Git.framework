@@ -1,6 +1,5 @@
 require 'socket'
 require 'stringio'
-require 'pp'
 
 module Rack
   module Handler
@@ -50,17 +49,21 @@ module Rack
         505 => 'HTTP Version Not Supported'
       }
 
-      def self.run(app, options=nil)
-        new(app).listen
+      def self.run(app, options={}, &block)
+        new(app, options).listen(&block)
       end
 
-      def initialize(app)
+      def initialize(app, options={})
         @app = app
+        @host = options[:Host] || '0.0.0.0'
+        @port = options[:Port] || 8089
       end
 
       def listen
-        log 'Starting server on 0.0.0.0:8089'
-        server = TCPServer.new('0.0.0.0', 8089)
+        log "Starting server on #{@host}:#{@port}"
+        server = TCPServer.new(@host, @port)
+
+        yield server if block_given?
 
         loop do
           socket = server.accept
@@ -84,15 +87,14 @@ module Rack
               break if line.size == 0
               key, val = line.split(": ")
               key = key.upcase.gsub('-', '_')
+              key = "HTTP_#{key}" if !%w[CONTENT_TYPE CONTENT_LENGTH].include?(key)
               req[key] = val
             end
-            pp req
 
             # parse the body
             body = ''
             if (len = req['CONTENT_LENGTH']) && ["POST", "PUT"].member?(method)
               body = socket.read(len.to_i)
-              puts body
             end
 
             # process the request
@@ -105,7 +107,7 @@ module Rack
       end
 
       def log(message)
-        puts message
+        $stderr.puts message
       end
 
       def status_message(code)
@@ -114,8 +116,6 @@ module Rack
 
       def process_request(request, input_body, socket)
         env = {}.replace(request)
-        env.delete "HTTP_CONTENT_TYPE"
-        env.delete "HTTP_CONTENT_LENGTH"
         env["HTTP_VERSION"] ||= env["SERVER_PROTOCOL"]
         env["QUERY_STRING"] ||= ""
         env["SCRIPT_NAME"] = ""
@@ -133,19 +133,13 @@ module Rack
                      "rack.url_scheme" => ["yes", "on", "1"].include?(env["HTTPS"]) ? "https" : "http"
                    })
         status, headers, body = app.call(env)
-        if cl = headers["LENGTH_CORRECT"]
-          len = headers["Content-Length"].to_i
-          corr_len = len - cl.to_i
-          headers["Content-Length"] = corr_len.to_s
-        end
-        pp headers
         begin
           socket.write("HTTP/1.1 #{status} #{status_message(status)}\r\n")
           headers.each do |k, vs|
             vs.split("\n").each { |v| socket.write("#{k}: #{v}\r\n")}
           end
           socket.write("\r\n")
-          body.each {|s| socket.write(s)}
+          body.each { |s| socket.write(s) }
         ensure
           body.close if body.respond_to? :close
         end

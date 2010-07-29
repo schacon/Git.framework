@@ -1,5 +1,5 @@
 //
-//  GITHttpHelper.h
+//  GITHttpServerHelper.h
 //  Git
 //
 //  Created by Scott Chacon on 4/11/10.
@@ -14,7 +14,7 @@
 // it easier to build a server with whatever Obj-C server library
 // you want.
 
-@interface GITHttpHelper : NSObject {
+@interface GITHttpServerHelper : NSObject {
     GITRepo *repo;
 	NSMutableDictionary*	refDict;
 }

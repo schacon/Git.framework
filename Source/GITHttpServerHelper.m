@@ -1,19 +1,19 @@
 //
-//  GITHttpHelper.m
+//  GITHttpServerHelper.m
 //  Git
 //
 //  Created by Scott Chacon on 4/11/10.
 //  Copyright 2010 Geoff Garside. All rights reserved.
 //
 
-#import "GITHttpHelper.h"
+#import "GITHttpServerHelper.h"
 #import "GITRef.h"
 #import "GITCommit.h"
 #import "GITObjectHash.h"
 #import "GITTree.h"
 #import "GITTreeItem.h"
 
-@implementation GITHttpHelper
+@implementation GITHttpServerHelper
 
 @synthesize repo;
 @synthesize refDict;

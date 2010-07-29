@@ -33,10 +33,10 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		314EE6B111E2A46F0038F724 /* GITHttpHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 314EE6AF11E2A46F0038F724 /* GITHttpHelper.h */; };
-		314EE6B211E2A46F0038F724 /* GITHttpHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 314EE6B011E2A46F0038F724 /* GITHttpHelper.m */; };
-		314EE6B311E2A46F0038F724 /* GITHttpHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 314EE6AF11E2A46F0038F724 /* GITHttpHelper.h */; };
-		314EE6B411E2A46F0038F724 /* GITHttpHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 314EE6B011E2A46F0038F724 /* GITHttpHelper.m */; };
+		314EE6B111E2A46F0038F724 /* GITHttpServerHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 314EE6AF11E2A46F0038F724 /* GITHttpServerHelper.h */; };
+		314EE6B211E2A46F0038F724 /* GITHttpServerHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 314EE6B011E2A46F0038F724 /* GITHttpServerHelper.m */; };
+		314EE6B311E2A46F0038F724 /* GITHttpServerHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 314EE6AF11E2A46F0038F724 /* GITHttpServerHelper.h */; };
+		314EE6B411E2A46F0038F724 /* GITHttpServerHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 314EE6B011E2A46F0038F724 /* GITHttpServerHelper.m */; };
 		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 		F5124D5E10CC5423002B834B /* NSRangeEnd.h in Headers */ = {isa = PBXBuildFile; fileRef = F5124D5C10CC5423002B834B /* NSRangeEnd.h */; };
 		F5124D5F10CC5423002B834B /* NSRangeEnd.m in Sources */ = {isa = PBXBuildFile; fileRef = F5124D5D10CC5423002B834B /* NSRangeEnd.m */; };
@@ -219,8 +219,8 @@
 
 /* Begin PBXFileReference section */
 		089C1667FE841158C02AAC07 /* InfoPlist.strings */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = InfoPlist.strings; path = Resource/English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		314EE6AF11E2A46F0038F724 /* GITHttpHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GITHttpHelper.h; path = Source/GITHttpHelper.h; sourceTree = "<group>"; };
-		314EE6B011E2A46F0038F724 /* GITHttpHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GITHttpHelper.m; path = Source/GITHttpHelper.m; sourceTree = "<group>"; };
+		314EE6AF11E2A46F0038F724 /* GITHttpServerHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GITHttpServerHelper.h; path = Source/GITHttpServerHelper.h; sourceTree = "<group>"; };
+		314EE6B011E2A46F0038F724 /* GITHttpServerHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GITHttpServerHelper.m; path = Source/GITHttpServerHelper.m; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* Git_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Git_Prefix.pch; path = Source/Git_Prefix.pch; sourceTree = "<group>"; };
 		8DC2EF5A0486A6940098B216 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Resource/Info.plist; sourceTree = "<group>"; };
 		8DC2EF5B0486A6940098B216 /* Git.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Git.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -400,8 +400,8 @@
 		08FB77AEFE84172EC02AAC07 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				314EE6AF11E2A46F0038F724 /* GITHttpHelper.h */,
-				314EE6B011E2A46F0038F724 /* GITHttpHelper.m */,
+				314EE6AF11E2A46F0038F724 /* GITHttpServerHelper.h */,
+				314EE6B011E2A46F0038F724 /* GITHttpServerHelper.m */,
 				F5FC28CD10A63A6700EFB922 /* GITPackFile */,
 				F5FC28CF10A63A7800EFB922 /* GITPackIndex */,
 				F599A8CF105EFCE8003CD1C0 /* GITRepo.h */,
@@ -674,7 +674,7 @@
 				F553A8781101FACC007799A9 /* GITPackCollection.h in Headers */,
 				F52D57F8111DA4FC005A461E /* GITCommitEnumerator.h in Headers */,
 				F593ABEC117EE28600B9DEB0 /* Git.h in Headers */,
-				314EE6B111E2A46F0038F724 /* GITHttpHelper.h in Headers */,
+				314EE6B111E2A46F0038F724 /* GITHttpServerHelper.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -723,7 +723,7 @@
 				F54022AE1180DC660039933F /* OBError.h in Headers */,
 				F54022B01180DC680039933F /* objc.h in Headers */,
 				F54022B11180DC6A0039933F /* OBUtilities.h in Headers */,
-				314EE6B311E2A46F0038F724 /* GITHttpHelper.h in Headers */,
+				314EE6B311E2A46F0038F724 /* GITHttpServerHelper.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -879,7 +879,7 @@
 				F52D57F9111DA4FC005A461E /* GITCommitEnumerator.m in Sources */,
 				F594CB2811864CE500E82F38 /* GITGraph.m in Sources */,
 				F594CB2C118777C800E82F38 /* GITGraphNode.m in Sources */,
-				314EE6B211E2A46F0038F724 /* GITHttpHelper.m in Sources */,
+				314EE6B211E2A46F0038F724 /* GITHttpServerHelper.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -926,7 +926,7 @@
 				F54022AD1180DC650039933F /* OBBacktraceBuffer.m in Sources */,
 				F54022AF1180DC660039933F /* OBError.m in Sources */,
 				F54022B21180DC6B0039933F /* OBUtilities.m in Sources */,
-				314EE6B411E2A46F0038F724 /* GITHttpHelper.m in Sources */,
+				314EE6B411E2A46F0038F724 /* GITHttpServerHelper.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

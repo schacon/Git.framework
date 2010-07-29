@@ -67,7 +67,7 @@ class GitHttp
       return render_no_access if !has_access(@rpc, true)
 
       git = GITRepo.repoWithRoot(@dir)
-      http = GITHttpHelper.alloc.initWithRepo(git)
+      http = GITHttpServerHelper.alloc.initWithRepo(git)
 
       @res = Rack::Response.new
       @res.status = 200
@@ -88,7 +88,7 @@ class GitHttp
       if has_access(service_name)
         # TODO : get_info_refs
         git = GITRepo.repoWithRoot(@dir)
-        http = GITHttpHelper.alloc.initWithRepo(git)
+        http = GITHttpServerHelper.alloc.initWithRepo(git)
         refs = http.refAdvertisement("git-" + service_name)
         refs = NSString.alloc.initWithData(refs, encoding:NSString.defaultCStringEncoding)
 

@@ -133,6 +133,13 @@ module Rack
                      "rack.url_scheme" => ["yes", "on", "1"].include?(env["HTTPS"]) ? "https" : "http"
                    })
         status, headers, body = app.call(env)
+        if cl = headers["LENGTH_CORRECT"]
+          len = headers["Content-Length"].to_i
+          corr_len = len - cl.to_i
+          headers["Content-Length"] = corr_len.to_s
+        end
+        pp headers
+
         begin
           socket.write("HTTP/1.1 #{status} #{status_message(status)}\r\n")
           headers.each do |k, vs|
